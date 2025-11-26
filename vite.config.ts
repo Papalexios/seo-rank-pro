@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => {
         target: 'esnext'
       },
       build: {
+        outDir: 'dist',
         target: 'esnext',
         rollupOptions: {
           onwarn(warning, warn) {
