@@ -173,7 +173,7 @@ Return HTML body.
 },
 content_refresher: {
     systemInstruction: `You are a specialized "Content Resurrection Engine" targeting **${TARGET_YEAR}** (Next Year).
-**MISSION:** Update ONLY specific sections for ${TARGET_YEAR} freshness.
+**MISSION:** Update ONLY specific sections for ${TARGET_YEAR} freshness using Semantic Keywords.
 **DO NOT** rewrite the whole post.
 **DO NOT** output the full body.
 
@@ -182,20 +182,22 @@ content_refresher: {
 - **High Energy:** Punchy. Direct. No fluff.
 - **No Jargon:** Explain complex topics simply.
 
-**SNIPPET TRAP PROTOCOL (AEO):**
-- The **introHtml** MUST start with a paragraph containing an exactly 45-55 word **bolded** definition that directly answers the user's main search intent. This is to capture the Google Featured Snippet (Zero-Click).
+**SNIPPET TRAP PROTOCOL (AEO) - NON-NEGOTIABLE:**
+- The **introHtml** MUST start with a paragraph containing an exactly 45-55 word **BOLDED** definition that directly answers the user's main search intent.
+- **Example:** <p><strong>Content refresh is the process of updating old blog posts with new data, keywords, and structural improvements to boost rankings. It signals to Google that your site is active and provides current value to readers in 2026.</strong></p>
 
 **CRITICAL RULES:**
 1. **NO "SOTA":** NEVER use the word "SOTA" or "State of the Art".
 2. **REAL LINKS ONLY:** Any link in the table MUST be real.
 3. **PAA INTEGRATION:** You MUST answer the provided "People Also Ask" questions in the FAQ section.
+4. **SEMANTIC INJECTION:** You MUST naturally weave the provided semantic keywords into the Intro and FAQ answers.
 
 **REQUIRED OUTPUT (JSON ONLY):**
 Return a JSON object with exactly these 4 fields:
 
 1.  **\`introHtml\`**:
-    *   **Content:** <p><strong>[45-55 word direct definition/answer to topic]</strong></p> <p>[Short, high-energy hook for ${TARGET_YEAR}]</p>
-    *   **Goal:** AEO Dominance.
+    *   **Content:** <p><strong>[45-55 word direct definition/answer]</strong></p> <p>[Short, high-energy hook for ${TARGET_YEAR}]</p>
+    *   **Constraint:** Must contain semantic keywords.
 
 2.  **\`keyTakeawaysHtml\`**:
     *   **Goal:** 5 "Power Insights" for ${TARGET_YEAR}.
@@ -209,7 +211,7 @@ Return a JSON object with exactly these 4 fields:
 4.  **\`faqHtml\`**:
     *   **Goal:** Answer "People Also Ask" questions.
     *   **Structure:** \`<div class="faq-section"><h2>Frequently Asked Questions</h2>...</div>\`.
-    *   **Content:** Answer each PAA question directly and concisely (Snippet Trap style). Use <details><summary>Question</summary>Answer</details> format if possible, or just H3/P.
+    *   **Content:** Answer exactly 6 PAA questions directly and concisely (Snippet Trap style). Use <details><summary>Question</summary>Answer</details> format.
 
 **JSON STRUCTURE:**
 {
@@ -221,20 +223,22 @@ Return a JSON object with exactly these 4 fields:
   "faqHtml": "<div class='faq-section'><h2>...</h2>...</div>"
 }
 `,
-    userPrompt: (content: string, title: string, keyword: string, paaQuestions: string[] | null) => `
+    userPrompt: (content: string, title: string, keyword: string, paaQuestions: string[] | null, semanticKeywords: string[] | null) => `
 **TITLE:** ${title}
 **KEYWORD:** ${keyword}
+**SEMANTIC KEYWORDS (Inject These):** ${semanticKeywords ? semanticKeywords.join(', ') : 'N/A'}
 **ORIGINAL CONTENT (First 15k chars):**
 ${content.substring(0, 15000)}
 
 **PEOPLE ALSO ASK (PAA) QUESTIONS (Must Answer):**
-${paaQuestions ? paaQuestions.join('\n') : 'No PAA data. Generate relevant FAQs based on the content.'}
+${paaQuestions && paaQuestions.length > 0 ? paaQuestions.join('\n') : 'No PAA data available. Generate 6 highly relevant FAQs based on search intent.'}
 
 **TASK:**
 Generate the 4 surgical update snippets (Intro, Takeaways, Table, FAQ) for **${TARGET_YEAR}**.
 **MANDATE:** 
-1. **Intro:** Must start with a 45-55 word BOLDED definition.
-2. **FAQs:** Must answer the PAA questions provided.
+1. **Intro:** Must start with a 45-55 word **BOLDED** definition.
+2. **FAQs:** Must answer the 6 PAA questions (or generate 6 if missing).
+3. **Style:** Grade 5 Readability.
 `
 },
 semantic_keyword_generator: {

@@ -1,10 +1,5 @@
 
-import { GeneratedContent, SiteInfo, ExpandedGeoTargeting } from './types';
-
-export type WpConfig = {
-    url: string;
-    username: string;
-};
+import { GeneratedContent, SiteInfo, ExpandedGeoTargeting, WpConfig } from './types';
 
 // =================================================================
 // 💎 PREMIUM SCHEMA.ORG MARKUP GENERATOR
@@ -83,11 +78,9 @@ function createLocalBusinessSchema(siteInfo: SiteInfo, geoTargeting: ExpandedGeo
         },
         "geo": {
             "@type": "GeoCoordinates",
-            // Ideally lat/long would be here, but we default to country for now to avoid errors
             "addressCountry": geoTargeting?.country ?? ''
         },
         // 🚀 SOTA UPGRADE: Service Area Expansion
-        // This tells Google you serve the entire region, not just one zip code.
         "areaServed": [
             {
                 "@type": "City",
@@ -148,7 +141,7 @@ function createArticleSchema(
         "about": {
             "@type": "Thing",
             "name": content?.primaryKeyword,
-            "sameAs": `https://en.wikipedia.org/wiki/${content?.primaryKeyword.replace(/\s+/g, '_')}`
+            "sameAs": `https://en.wikipedia.org/wiki/${(content?.primaryKeyword || '').replace(/\s+/g, '_')}`
         },
         "mentions": createEntityMentions(content?.semanticKeywords || []),
 
@@ -429,5 +422,10 @@ export function generateSchemaMarkup(schemaObject: object): string {
     
     const schemaScript = `<script type="application/ld+json">\n${JSON.stringify(schemaObject, null, 2)}\n</script>`;
     
+    // ════════════════════════════════════════════════════════════════════════════════
+    // CRITICAL: WordPress REST API strips <script> tags by default for security.
+    // The ONLY reliable method is wrapping in Gutenberg's Custom HTML block.
+    // This preserves the schema and prevents it from being stripped or displayed as text.
+    // ════════════════════════════════════════════════════════════════════════════════
     return `\n\n<!-- wp:html -->\n${schemaScript}\n<!-- /wp:html -->\n\n`;
 }

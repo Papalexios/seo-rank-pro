@@ -1,4 +1,3 @@
-
 import { GoogleGenAI } from "@google/genai";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
@@ -66,7 +65,8 @@ const fetchPAA = async (keyword: string, serperApiKey: string) => {
         });
         const data = await response.json();
         if (data.peopleAlsoAsk && Array.isArray(data.peopleAlsoAsk)) {
-            return data.peopleAlsoAsk.map((item: any) => item.question).slice(0, 5);
+            // SOTA REQUIREMENT: Top 6 FAQs for maximum SERP real estate
+            return data.peopleAlsoAsk.map((item: any) => item.question).slice(0, 6);
         }
         return null;
     } catch (e) {
@@ -506,12 +506,21 @@ export const generateContent = {
             }
         }
 
-        // 2. Fetch PAA Questions (SOTA Upgrade)
-        dispatch({ type: 'UPDATE_STATUS', payload: { id: item.id, status: 'generating', statusText: 'Fetching FAQs...' } });
-        const paaQuestions = await fetchPAA(item.title, serperApiKey);
+        // 2. Fetch PAA Questions & Generate Semantic Keywords (SOTA Upgrade)
+        dispatch({ type: 'UPDATE_STATUS', payload: { id: item.id, status: 'generating', statusText: 'Fetching FAQs & Semantics...' } });
+        
+        const [paaQuestions, semanticKeywordsResponse] = await Promise.all([
+            fetchPAA(item.title, serperApiKey),
+            memoizedCallAI(context.apiClients, context.selectedModel, context.geoTargeting, context.openrouterModels, context.selectedGroqModel, 'semantic_keyword_generator', [item.title, context.geoTargeting.enabled ? context.geoTargeting.location : null], 'json')
+        ]);
 
-        // 3. Surgical Update
-        dispatch({ type: 'UPDATE_STATUS', payload: { id: item.id, status: 'generating', statusText: 'Generating Updates...' } });
+        const semanticKeywordsRaw = await parseJsonWithAiRepair(semanticKeywordsResponse, aiRepairer);
+        const semanticKeywords = Array.isArray(semanticKeywordsRaw?.semanticKeywords)
+            ? semanticKeywordsRaw.semanticKeywords.map((k: any) => (typeof k === 'object' ? k.keyword : k)).slice(0, 5) // Top 5 for injection
+            : [];
+
+        // 3. Surgical Update with SOTA Requirements
+        dispatch({ type: 'UPDATE_STATUS', payload: { id: item.id, status: 'generating', statusText: 'Generating SOTA Updates...' } });
         
         const responseText = await memoizedCallAI(
             context.apiClients, 
@@ -520,25 +529,25 @@ export const generateContent = {
             context.openrouterModels, 
             context.selectedGroqModel, 
             'content_refresher', 
-            [sourceContent, item.title, item.title, paaQuestions], 
+            [sourceContent, item.title, item.title, paaQuestions, semanticKeywords], 
             'json', 
             true 
         );
         
         let parsedSnippets = await parseJsonWithAiRepair(responseText, aiRepairer);
         
-        // AGGRESSIVE SCRUB
+        // AGGRESSIVE SCRUB (But allow HTML)
         const scrubForbiddenTerms = (text: string) => {
             if (!text) return "";
             return text
-                .replace(/SOTA/gi, 'Modern')
+                .replace(/SOTA/gi, 'Modern') // Remove explicit "SOTA" text from output
                 .replace(/State of the Art/gi, 'Industry Leading');
         };
 
         parsedSnippets.introHtml = scrubForbiddenTerms(parsedSnippets.introHtml);
         parsedSnippets.keyTakeawaysHtml = scrubForbiddenTerms(parsedSnippets.keyTakeawaysHtml);
         parsedSnippets.comparisonTableHtml = scrubForbiddenTerms(parsedSnippets.comparisonTableHtml);
-        parsedSnippets.faqHtml = scrubForbiddenTerms(parsedSnippets.faqHtml); // Clean FAQs
+        parsedSnippets.faqHtml = scrubForbiddenTerms(parsedSnippets.faqHtml);
 
         // SOTA FACT CHECKING
         if (parsedSnippets.comparisonTableHtml && serperApiKey) {
@@ -574,6 +583,7 @@ export const generateContent = {
         const generated = normalizeGeneratedContent({}, item.title);
         generated.title = parsedSnippets.seoTitle || item.title;
         generated.metaDescription = parsedSnippets.metaDescription || '';
+        generated.semanticKeywords = semanticKeywords; // Store them for schema
         
         // Generate Preview HTML including FAQs
         generated.content = `
@@ -594,7 +604,7 @@ export const generateContent = {
                 </div>
                 <hr style="border-top: 1px dashed #ccc; margin: 2rem 0;">
                 <div class="preview-section">
-                    <h3>❓ FAQs (PAA Based)</h3>
+                    <h3>❓ SOTA FAQs (PAA Based)</h3>
                     ${parsedSnippets.faqHtml || '<p>No FAQs generated.</p>'}
                 </div>
             </div>

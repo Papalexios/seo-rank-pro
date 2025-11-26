@@ -116,38 +116,4 @@ export type SeoCheck = {
 };
 
 export type ApiClients = {
-    gemini: GoogleGenAI | null;
-    openai: OpenAI | null;
-    anthropic: Anthropic | null;
-    openrouter: OpenAI | null;
-    groq: OpenAI | null;
-};
-
-export type WpConfig = {
-    url: string;
-    username: string;
-};
-
-export interface GapAnalysisSuggestion {
-    keyword: string;
-    searchIntent: 'Informational' | 'Commercial' | 'Transactional';
-    rationale: string;
-    trendScore: number; // 1-100 (Viral Confidence)
-    difficulty: 'Easy' | 'Medium' | 'Hard'; // KD Estimation
-    monthlyVolume: string; // e.g., "1k-10k"
-}
-
-export interface GenerationContext {
-    dispatch: React.Dispatch<any>;
-    existingPages: SitemapPage[];
-    siteInfo: SiteInfo;
-    wpConfig: WpConfig;
-    geoTargeting: ExpandedGeoTargeting;
-    serperApiKey: string;
-    apiKeyStatus: Record<string, 'idle' | 'validating' | 'valid' | 'invalid'>;
-    apiClients: ApiClients;
-    selectedModel: string;
-    openrouterModels: string[];
-    selectedGroqModel: string;
-    neuronConfig: NeuronConfig; // SOTA: Added NeuronWriter config
-}
+    gemini: GoogleGenAI | null

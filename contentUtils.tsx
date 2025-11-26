@@ -1,6 +1,6 @@
 
 import { GeneratedContent, SiteInfo, SitemapPage } from "./types";
-import { MIN_INTERNAL_LINKS, TARGET_MAX_WORDS, TARGET_MIN_WORDS } from "./constants";
+import { TARGET_MAX_WORDS, TARGET_MIN_WORDS } from "./constants";
 
 export const escapeRegExp = (string: string) => {
     return string.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
@@ -150,11 +150,10 @@ export const fetchWithProxies = async (
     throw new Error(`Network Failure: ${errorDetails}`);
 };
 
-// SOTA CRAWLING ENGINE v10.0 - Jina AI Integration
 export const smartCrawl = async (url: string): Promise<string> => {
     console.log(`[SOTA Crawl] Initiating smart crawl for: ${url}`);
 
-    // LAYER 1: Jina AI Reader (SOTA Method)
+    // LAYER 1: Jina AI Reader
     try {
         console.log(`[SOTA Crawl] Trying Jina AI Reader...`);
         const jinaUrl = `https://r.jina.ai/${url}`;
@@ -171,7 +170,7 @@ export const smartCrawl = async (url: string): Promise<string> => {
         console.warn(`[SOTA Crawl] Jina AI fetch error:`, e);
     }
 
-    // LAYER 2: CORS Proxies + DOM Extraction (Fallback)
+    // LAYER 2: CORS Proxies + DOM Extraction
     console.log(`[SOTA Crawl] Falling back to CORS proxies...`);
     try {
         const response = await fetchWithProxies(url);
@@ -286,7 +285,6 @@ export const normalizeGeneratedContent = (parsedJson: any, itemTitle: string): G
     
     if (!normalized.imageDetails || !Array.isArray(normalized.imageDetails)) normalized.imageDetails = [];
 
-    // SOTA Image Normalization
     normalized.imageDetails = normalized.imageDetails.map((item: any, index: number) => {
         if (typeof item === 'string') {
              const slugBase = normalized.slug || itemTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
@@ -319,7 +317,6 @@ export const normalizeGeneratedContent = (parsedJson: any, itemTitle: string): G
         normalized.content += '<p>[IMAGE_1_PLACEHOLDER]</p><p>[IMAGE_2_PLACEHOLDER]</p>';
     }
 
-    // Defaults
     if (!normalized.metaDescription) normalized.metaDescription = `Comprehensive guide on ${normalized.title}.`;
     if (!normalized.primaryKeyword) normalized.primaryKeyword = itemTitle;
     if (!normalized.semanticKeywords) normalized.semanticKeywords = [];
@@ -334,7 +331,6 @@ export const normalizeGeneratedContent = (parsedJson: any, itemTitle: string): G
     return normalized as GeneratedContent;
 };
 
-// SOTA VERIFICATION FOOTER HTML
 export const generateVerificationFooterHtml = (): string => {
     const currentYear = new Date().getFullYear();
     return `
@@ -357,13 +353,7 @@ export const generateVerificationFooterHtml = (): string => {
 </div>`;
 };
 
-/**
- * ⚡⚡⚡ SURGICAL DOM UPDATE V2.1 (SOTA EDITION) ⚡⚡⚡
- * Precision updates ONLY for Intro, Key Takeaways, and Table Injection.
- * DOES NOT TOUCH THE REST OF THE CONTENT.
- * FIXED: InsertBefore parent errors.
- */
-export const performSurgicalUpdate = (originalHtml: string, snippets: { introHtml: string, keyTakeawaysHtml: string, comparisonTableHtml: string }): string => {
+export const performSurgicalUpdate = (originalHtml: string, snippets: { introHtml: string, keyTakeawaysHtml: string, comparisonTableHtml: string, faqHtml?: string }): string => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(originalHtml, 'text/html');
     const body = doc.body;
@@ -372,19 +362,13 @@ export const performSurgicalUpdate = (originalHtml: string, snippets: { introHtm
     const firstH2 = body.querySelector('h2');
     
     if (firstH2 && firstH2.parentNode) {
-        // H2 found. We operate within its parent context to avoid "not a child" errors.
         const parent = firstH2.parentNode;
         let sibling = parent.firstChild;
         const nodesToRemove: ChildNode[] = [];
 
-        // Identify nodes before the H2 to remove (Intro)
-        // We iterate through siblings of the parent until we hit the H2
         while (sibling && sibling !== firstH2) {
             const next = sibling.nextSibling;
-            // Logic: Remove P tags and Text nodes. 
-            // Keep Images/Figures if they are part of the "hero" section usually at top.
             if (sibling.nodeName === 'P' || sibling.nodeName === '#text') {
-                // Basic check: don't remove if it contains an image (Hero Image preservation)
                 const hasImg = sibling.nodeName === 'P' && (sibling as Element).querySelector('img, iframe, figure');
                 if (!hasImg) {
                      nodesToRemove.push(sibling);
@@ -392,43 +376,30 @@ export const performSurgicalUpdate = (originalHtml: string, snippets: { introHtm
             }
             sibling = next;
         }
-        
-        // Remove identified nodes
         nodesToRemove.forEach(n => parent.removeChild(n));
 
-        // Inject New Intro
         const tempIntroDiv = doc.createElement('div');
         tempIntroDiv.innerHTML = snippets.introHtml;
         const newIntroNodes = Array.from(tempIntroDiv.childNodes);
         
-        // Insert new intro nodes before the H2
-        // CRITICAL: Use parent.insertBefore on the PARENT, not body.insertBefore
-        // Check strict containment to avoid "not a child" errors
         if (parent.contains(firstH2)) {
              newIntroNodes.forEach(n => {
-                 // Ensure n is a valid node and not null
                  if (n) parent.insertBefore(n, firstH2);
              });
         } else {
-             // Fallback if DOM state is weird: Append to parent
              newIntroNodes.forEach(n => {
                  if (n) parent.appendChild(n);
              });
         }
-
     } else {
-        // Fallback: No H2 found (rare). Prepend to body.
         const tempIntroDiv = doc.createElement('div');
         tempIntroDiv.innerHTML = snippets.introHtml;
         const newIntroNodes = Array.from(tempIntroDiv.childNodes);
-        
-        // Prepend in reverse order to maintain sequence
         newIntroNodes.reverse().forEach(n => {
             if (body.firstChild) body.insertBefore(n, body.firstChild);
             else body.appendChild(n);
         });
     }
-
 
     // --- 2. KEY TAKEAWAYS REPLACEMENT ---
     const allHeaders = Array.from(body.querySelectorAll('h2, h3, h4, h5, h6, strong, b'));
@@ -440,7 +411,6 @@ export const performSurgicalUpdate = (originalHtml: string, snippets: { introHtm
     
     const tempSnippet = doc.createElement('div');
     tempSnippet.innerHTML = snippets.keyTakeawaysHtml;
-    // Extract content if AI wrapped it, otherwise use inner
     const innerContent = tempSnippet.querySelector('.key-takeaways-box') ? tempSnippet.querySelector('.key-takeaways-box')!.innerHTML : snippets.keyTakeawaysHtml;
     takeawaysContainer.innerHTML = innerContent;
     
@@ -453,14 +423,10 @@ export const performSurgicalUpdate = (originalHtml: string, snippets: { introHtm
     }
 
     if (existingTakeawaysHeader && existingTakeawaysHeader.parentNode) {
-        // Safe replacement
         const parent = existingTakeawaysHeader.parentNode as Element;
-        
-        // Check if the header is wrapped in a specific container (like a section or div) that holds ONLY the takeaways
         if ((parent.nodeName === 'DIV' || parent.nodeName === 'SECTION') && parent.textContent && parent.textContent.length < 1500 && parent.childNodes.length < 10) {
              parent.replaceWith(takeawaysContainer);
         } else {
-            // Otherwise, just replace the header and remove immediate next sibling if it looks like the list
             let sibling = existingTakeawaysHeader.nextElementSibling;
             if (sibling && (sibling.tagName === 'UL' || sibling.tagName === 'OL' || sibling.tagName === 'P')) {
                 sibling.remove();
@@ -468,14 +434,12 @@ export const performSurgicalUpdate = (originalHtml: string, snippets: { introHtm
             existingTakeawaysHeader.replaceWith(takeawaysContainer);
         }
     } else {
-        // No existing takeaways found. Insert after the new intro (before first H2).
         if (firstH2 && firstH2.parentNode && firstH2.parentNode.contains(firstH2)) {
             firstH2.parentNode.insertBefore(takeawaysContainer, firstH2);
         } else {
             body.appendChild(takeawaysContainer);
         }
     }
-
 
     // --- 3. DYNAMIC TABLE INJECTION ---
     const allH2s = Array.from(body.querySelectorAll('h2'));
@@ -487,11 +451,9 @@ export const performSurgicalUpdate = (originalHtml: string, snippets: { introHtm
     tableWrapper.className = 'sota-table-wrapper';
     tableWrapper.setAttribute('style', 'margin: 3rem 0; overflow-x: auto; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); background: white; padding: 1rem;');
     
-    // Clean and verify table HTML
     let rawTableHtml = snippets.comparisonTableHtml || '';
     tableWrapper.innerHTML = rawTableHtml;
 
-    // Style the injected H2
     const tableH2 = tableWrapper.querySelector('h2');
     if (tableH2) {
         tableH2.setAttribute('style', 'font-family: "Montserrat", sans-serif; font-weight: 800; color: #1e293b; margin-bottom: 1rem; border-left: 5px solid #3b82f6; padding-left: 1rem;');
@@ -540,13 +502,57 @@ export const performSurgicalUpdate = (originalHtml: string, snippets: { introHtm
         }
     }
 
+    // --- 4. FAQ REPLACEMENT (SOTA) ---
+    if (snippets.faqHtml) {
+        const tempFaqDiv = doc.createElement('div');
+        tempFaqDiv.innerHTML = snippets.faqHtml;
+        const newFaqNode = tempFaqDiv.firstElementChild || tempFaqDiv;
+
+        const existingFaqHeader = Array.from(body.querySelectorAll('h2, h3, h4')).find(el => {
+            const text = el.textContent?.toLowerCase() || '';
+            return text.includes('frequently asked') || text.includes('faq');
+        });
+
+        if (existingFaqHeader && existingFaqHeader.parentNode) {
+            const parent = existingFaqHeader.parentNode;
+            
+            // Heuristic: Check if parent is a dedicated FAQ container
+            const isDedicatedContainer = (parent as Element).className.toLowerCase().includes('faq') || 
+                                         (parent.childNodes.length < 20 && (parent as Element).tagName !== 'BODY' && (parent as Element).tagName !== 'MAIN');
+
+            if (isDedicatedContainer) {
+                 (parent as Element).replaceWith(newFaqNode);
+            } else {
+                // Sibling cleanup
+                const nodesToRemove: ChildNode[] = [existingFaqHeader];
+                let sibling = existingFaqHeader.nextSibling;
+                let lookAhead = 0;
+                while (sibling && lookAhead < 50) {
+                    const el = sibling as Element;
+                    const isHeader = sibling.nodeType === 1 && /^H[1-3]$/.test(el.tagName);
+                    if (isHeader) break;
+                    
+                    nodesToRemove.push(sibling);
+                    sibling = sibling.nextSibling;
+                    lookAhead++;
+                }
+                
+                if (parent.contains(existingFaqHeader)) {
+                    parent.insertBefore(newFaqNode, existingFaqHeader);
+                    nodesToRemove.forEach(n => n.remove());
+                }
+            }
+        } else {
+            body.appendChild(newFaqNode);
+        }
+    }
+
     return body.innerHTML;
 }
 
 export const postProcessGeneratedHtml = (html: string, plan: GeneratedContent, youtubeVideos: any[] | null, siteInfo: SiteInfo, isRefresh: boolean = false): string => {
     let processedHtml = html;
 
-    // SOTA CLEANUP: Specific user-reported hallucinations and banned artifacts
     const bannedPatterns = [
         /Read Time \d+ Min/gi,
         /Sources Scanned \d+ Citations/gi,
@@ -587,12 +593,9 @@ export const postProcessGeneratedHtml = (html: string, plan: GeneratedContent, y
     }
 
     processedHtml = processedHtml.replace(/<div[^>]*class="[^"]*author-box[^"]*"[^>]*>[\s\S]*?<\/div>/gi, '');
-    
-    // Aggressively strip verification footer if it exists, especially for refresh
     processedHtml = processedHtml.replace(/<div[^>]*class="verification-footer-sota"[^>]*>[\s\S]*?<\/div>/gi, '');
     processedHtml = processedHtml.replace(/Scientific Verification & Accuracy Check[\s\S]*?trustworthy information available\./gi, '');
 
-    // Only add footer if it's NOT a refresh operation
     if (!isRefresh) {
         const verificationFooter = generateVerificationFooterHtml();
         processedHtml = processedHtml + verificationFooter;

@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useCallback, useRef, memo } from 'react';
 import { ContentItem, SeoCheck, ExpandedGeoTargeting, WpConfig, SitemapPage, ApiClients, NeuronConfig } from './types';
 import { calculateFleschReadability, getReadabilityVerdict, escapeRegExp } from './contentUtils';
@@ -554,7 +553,7 @@ export const AppFooter = memo(() => (
         <div className="footer-content">
             <div className="footer-brand">
                 <img src="https://affiliatemarketingforsuccess.com/wp-content/uploads/2023/03/cropped-Affiliate-Marketing-for-Success-Logo-Edited.png?lm=6666FEE0" alt="Logo" className="footer-logo-img" />
-                <p className="footer-desc">SOTA Content Orchestration Suite v11.5 - Gap Analysis Edition</p>
+                <p className="footer-desc">SOTA Content Orchestration Suite v11.0</p>
             </div>
             <div className="footer-links">
                 <a href="#">Docs</a>
@@ -566,7 +565,7 @@ export const AppFooter = memo(() => (
     </footer>
 ));
 
-// 🚀 SOTA BULK PUBLISHER MODAL (REAL VERSION)
+// 🚀 SOTA BULK PUBLISHER MODAL (FIXED)
 export const BulkPublishModal = ({ items, onClose, publishItem, wpConfig, wpPassword, onPublishSuccess }: any) => {
     const [isPublishing, setIsPublishing] = useState(false);
     const [logs, setLogs] = useState<string[]>([]);

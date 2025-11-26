@@ -115,6 +115,7 @@ export type SeoCheck = {
     advice: string;
 };
 
+// SOTA FIX: Complete ApiClients definition to resolve casting errors in services.tsx
 export type ApiClients = {
     gemini: GoogleGenAI | null;
     openai: OpenAI | null;
@@ -123,11 +124,13 @@ export type ApiClients = {
     groq: OpenAI | null;
 };
 
+// SOTA FIX: Move WpConfig here to be shared across app
 export type WpConfig = {
     url: string;
     username: string;
 };
 
+// SOTA FIX: Export GapAnalysisSuggestion
 export interface GapAnalysisSuggestion {
     keyword: string;
     searchIntent: 'Informational' | 'Commercial' | 'Transactional';
@@ -137,6 +140,7 @@ export interface GapAnalysisSuggestion {
     monthlyVolume: string; // e.g., "1k-10k"
 }
 
+// SOTA FIX: Export GenerationContext
 export interface GenerationContext {
     dispatch: React.Dispatch<any>;
     existingPages: SitemapPage[];
