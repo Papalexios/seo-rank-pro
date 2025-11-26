@@ -1,12 +1,10 @@
 
-// FIX: Import React to use React-specific types like React.Dispatch.
 import React from "react";
 import { GoogleGenAI } from "@google/genai";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 import { NeuronAnalysisResult } from "./neuronwriter";
 
-// SOTA FIX: Defined locally to prevent circular dependency with neuronwriter.ts
 export interface NeuronConfig {
     apiKey: string;
     projectId: string;
@@ -60,18 +58,17 @@ export type GeneratedContent = {
         twitter: string;
         linkedIn: string;
     };
-    // FIX: Add missing optional properties to align with AI response structure.
     faqSection?: { question: string, answer: string }[];
     keyTakeaways?: string[];
     outline?: string[];
     serpData?: any[] | null;
     references?: { title: string, url: string, source: string, year: number }[];
-    neuronAnalysis?: NeuronAnalysisResult | null; // SOTA: Store raw NeuronWriter data
-    surgicalSnippets?: { // SOTA: Store precise snippets for raw content injection
+    neuronAnalysis?: NeuronAnalysisResult | null;
+    surgicalSnippets?: {
         introHtml: string;
         keyTakeawaysHtml: string;
         comparisonTableHtml: string;
-        faqHtml: string; // NEW: PAA-driven FAQs
+        faqHtml: string;
     };
 };
 
@@ -116,4 +113,38 @@ export type SeoCheck = {
 };
 
 export type ApiClients = {
-    gemini: GoogleGenAI | null
+    gemini: GoogleGenAI | null;
+    openai: OpenAI | null;
+    anthropic: Anthropic | null;
+    openrouter: OpenAI | null;
+    groq: OpenAI | null;
+};
+
+export type WpConfig = {
+    url: string;
+    username: string;
+};
+
+export interface GapAnalysisSuggestion {
+    keyword: string;
+    searchIntent: 'Informational' | 'Commercial' | 'Transactional';
+    rationale: string;
+    trendScore: number;
+    difficulty: 'Easy' | 'Medium' | 'Hard';
+    monthlyVolume: string;
+}
+
+export interface GenerationContext {
+    dispatch: React.Dispatch<any>;
+    existingPages: SitemapPage[];
+    siteInfo: SiteInfo;
+    wpConfig: WpConfig;
+    geoTargeting: ExpandedGeoTargeting;
+    serperApiKey: string;
+    apiKeyStatus: Record<string, 'idle' | 'validating' | 'valid' | 'invalid'>;
+    apiClients: ApiClients;
+    selectedModel: string;
+    openrouterModels: string[];
+    selectedGroqModel: string;
+    neuronConfig: NeuronConfig;
+}

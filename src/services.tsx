@@ -121,7 +121,7 @@ const _internalCallAI = async (
             responseText = geminiResponse.text;
             break;
         case 'openai':
-            const openaiResponse = await callAiWithRetry(() => (client as OpenAI).chat.completions.create({
+            const openaiResponse = await callAiWithRetry(() => (client as unknown as OpenAI).chat.completions.create({
                 model: AI_MODELS.OPENAI_GPT4_TURBO,
                 messages: [{ role: "system", content: systemInstruction }, { role: "user", content: userPrompt }],
                 ...(responseFormat === 'json' && { response_format: { type: "json_object" } })
@@ -131,7 +131,7 @@ const _internalCallAI = async (
         case 'openrouter':
             for (const modelName of openrouterModels) {
                 try {
-                    const response = await callAiWithRetry(() => (client as OpenAI).chat.completions.create({
+                    const response = await callAiWithRetry(() => (client as unknown as OpenAI).chat.completions.create({
                         model: modelName,
                         messages: [{ role: "system", content: systemInstruction }, { role: "user", content: userPrompt }],
                          ...(responseFormat === 'json' && { response_format: { type: "json_object" } })
@@ -142,7 +142,7 @@ const _internalCallAI = async (
             }
             break;
         case 'groq':
-             const groqResponse = await callAiWithRetry(() => (client as OpenAI).chat.completions.create({
+             const groqResponse = await callAiWithRetry(() => (client as unknown as OpenAI).chat.completions.create({
                 model: selectedGroqModel,
                 messages: [{ role: "system", content: systemInstruction }, { role: "user", content: userPrompt }],
                 ...(responseFormat === 'json' && { response_format: { type: "json_object" } })
@@ -150,7 +150,7 @@ const _internalCallAI = async (
             responseText = groqResponse.choices[0].message.content;
             break;
         case 'anthropic':
-            const anthropicResponse = await callAiWithRetry(() => (client as Anthropic).messages.create({
+            const anthropicResponse = await callAiWithRetry(() => (client as unknown as Anthropic).messages.create({
                 model: AI_MODELS.ANTHROPIC_OPUS,
                 max_tokens: 4096,
                 system: systemInstruction,
@@ -173,7 +173,7 @@ export const callAI = async (...args: Parameters<typeof _internalCallAI>): Promi
         for (const fallback of fallbackOrder) {
             if (apiClients[fallback]) {
                 client = apiClients[fallback];
-                args[1] = fallback as string; 
+                args[1] = fallback as any; 
                 break;
             }
         }
